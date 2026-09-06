@@ -23,7 +23,7 @@ function write(key, value) {
 
 export const settingsStore = {
   get() {
-    return read(KEYS.settings, { apiKey: '', model: 'claude-sonnet-5', level: 'B1' })
+    return read(KEYS.settings, { apiKey: '', model: 'claude-sonnet-5', level: 'B1', autoSpeak: false })
   },
   set(partial) {
     const next = { ...this.get(), ...partial }
