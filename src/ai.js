@@ -35,6 +35,7 @@ Rules:
 - If they write in English or ask for an explanation, you may explain in English, then return to Finnish.
 - Keep replies short (2-5 sentences) so it feels like a real chat, not a lecture.
 - Do not use emojis — replies are read aloud by text-to-speech, and emoji get spoken as literal descriptions.
+- Do not use markdown formatting (no **bold**, no _italics_, no backticks). Plain text only — this chat displays raw text and reads it aloud as-is, so "**word**" would literally show and be spoken as asterisks.
 - Occasionally ask a follow-up question to keep the conversation going.`
 }
 

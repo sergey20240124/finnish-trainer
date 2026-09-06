@@ -51,6 +51,7 @@ function forSpeech(text) {
   return text
     .replace(/\p{Extended_Pictographic}/gu, '')
     .replace(/[\u{FE0F}\u{200D}\u{20E3}]/gu, '')
+    .replace(/[*_`#~]/g, '')
     .replace(/\s{2,}/g, ' ')
     .trim()
 }
