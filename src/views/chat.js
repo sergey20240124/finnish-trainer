@@ -17,6 +17,7 @@ export function render(container) {
   let sending = false
   let listening = false
   let recognizer = null
+  const expanded = new Set()
 
   const micSupported = isRecognitionSupported()
   const voiceSupported = isSynthesisSupported()
@@ -51,17 +52,32 @@ export function render(container) {
 
   function paint() {
     log.innerHTML = history
-      .map(
-        (m, i) => `
-        <div class="msg ${m.role}">
+      .map((m, i) => {
+        if (m.role !== 'assistant') {
+          return `<div class="msg ${m.role}">${escapeHtml(m.content)}</div>`
+        }
+        const showTranslation = m.translation && expanded.has(i)
+        return `
+        <div class="msg assistant">
           ${escapeHtml(m.content)}
-          ${m.role === 'assistant' && voiceSupported ? `<button class="icon-btn speak-btn" data-i="${i}" title="Play">🔊</button>` : ''}
+          <div class="msg-actions">
+            ${voiceSupported ? `<button class="icon-btn speak-btn" data-i="${i}" title="Play">🔊</button>` : ''}
+            ${m.translation ? `<button class="icon-btn translate-btn" data-i="${i}" title="Toggle English translation">${showTranslation ? 'Hide EN' : 'EN'}</button>` : ''}
+          </div>
+          ${showTranslation ? `<div class="translation">${escapeHtml(m.translation)}</div>` : ''}
         </div>`
-      )
+      })
       .join('')
     log.scrollTop = log.scrollHeight
     log.querySelectorAll('.speak-btn').forEach((btn) => {
       btn.onclick = () => speak(history[Number(btn.dataset.i)].content)
+    })
+    log.querySelectorAll('.translate-btn').forEach((btn) => {
+      btn.onclick = () => {
+        const i = Number(btn.dataset.i)
+        expanded.has(i) ? expanded.delete(i) : expanded.add(i)
+        paint()
+      }
     })
   }
 
@@ -77,8 +93,8 @@ export function render(container) {
     sendBtn.disabled = true
     sendBtn.textContent = 'Thinking...'
     try {
-      const reply = await chatReply({ apiKey: settings.apiKey, model: settings.model, level: settings.level, history })
-      history = [...history, { role: 'assistant', content: reply }]
+      const { text: reply, translation } = await chatReply({ apiKey: settings.apiKey, model: settings.model, level: settings.level, history })
+      history = [...history, { role: 'assistant', content: reply, translation }]
       chatStore.set(history)
       paint()
       if (voiceSupported && settingsStore.get().autoSpeak) speak(reply)

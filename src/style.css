@@ -104,6 +104,10 @@ label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 
 .msg { padding: 10px 14px; border-radius: 12px; max-width: 80%; line-height: 1.5; white-space: pre-wrap; }
 .msg.user { background: var(--blue-dim); align-self: flex-end; }
 .msg.assistant { background: var(--panel-2); align-self: flex-start; }
+.msg-actions { display: flex; gap: 6px; margin-top: 8px; }
+.msg-actions .icon-btn { font-size: 12px; padding: 3px 9px; opacity: .75; }
+.msg-actions .icon-btn:hover { opacity: 1; }
+.translation { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); color: var(--text-dim); font-size: 13px; font-style: italic; }
 .chat-input-row { display: flex; gap: 8px; }
 .chat-input-row textarea { min-height: 44px; }
 
