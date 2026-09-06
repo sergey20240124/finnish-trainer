@@ -1,5 +1,6 @@
 import { settingsStore } from '../storage.js'
 import { generateWritingPrompt, gradeWriting, AIError } from '../ai.js'
+import { escapeHtml } from '../util.js'
 
 export function render(container) {
   const settings = settingsStore.get()
@@ -42,7 +43,7 @@ export function render(container) {
   function renderPromptForm() {
     promptArea.innerHTML = `
       <h2>Tehtävä</h2>
-      <p>${currentPrompt}</p>
+      <p>${escapeHtml(currentPrompt)}</p>
       <textarea id="response" placeholder="Kirjoita vastauksesi tähän..." rows="6"></textarea>
       <div style="margin-top:10px">
         <button class="primary" id="grade">Get feedback</button>
@@ -70,7 +71,7 @@ export function render(container) {
           prompt: currentPrompt,
           response: responseText,
         })
-        feedbackEl.innerHTML = `<pre class="feedback">${feedback.replace(/</g, '&lt;')}</pre>`
+        feedbackEl.innerHTML = `<pre class="feedback">${escapeHtml(feedback)}</pre>`
       } catch (e) {
         errEl.textContent = e instanceof AIError ? e.message : 'Failed to grade. Try again.'
       } finally {

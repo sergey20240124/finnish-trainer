@@ -1,5 +1,6 @@
 import { settingsStore, chatStore } from '../storage.js'
 import { chatReply, AIError } from '../ai.js'
+import { escapeHtml } from '../util.js'
 
 export function render(container) {
   const settings = settingsStore.get()
@@ -37,12 +38,6 @@ export function render(container) {
       .map((m) => `<div class="msg ${m.role}">${escapeHtml(m.content)}</div>`)
       .join('')
     log.scrollTop = log.scrollHeight
-  }
-
-  function escapeHtml(s) {
-    const d = document.createElement('div')
-    d.textContent = s
-    return d.innerHTML
   }
 
   async function send() {
