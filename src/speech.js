@@ -44,14 +44,26 @@ function loadVoices() {
   return voicesPromise
 }
 
+// Strip characters that TTS engines tend to read aloud as literal descriptions
+// (emoji -> "grinning face", etc.) rather than skip. Text is unaffected on screen —
+// this only cleans up what gets spoken.
+function forSpeech(text) {
+  return text
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/[\u{FE0F}\u{200D}\u{20E3}]/gu, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 // Returns true if a native Finnish voice was found and used, false if it fell back
 // to the browser's default voice (still speaks, just not Finnish-accented).
 export async function speak(text, lang = 'fi-FI') {
-  if (!isSynthesisSupported() || !text) return false
+  const clean = text ? forSpeech(text) : ''
+  if (!isSynthesisSupported() || !clean) return false
   window.speechSynthesis.cancel()
   const voices = await loadVoices()
   const voice = voices.find((v) => v.lang === lang) || voices.find((v) => v.lang.startsWith(lang.slice(0, 2)))
-  const utter = new SpeechSynthesisUtterance(text)
+  const utter = new SpeechSynthesisUtterance(clean)
   utter.lang = lang
   if (voice) utter.voice = voice
   utter.rate = 0.92
