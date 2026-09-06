@@ -108,6 +108,7 @@ label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 
 .msg-actions .icon-btn { font-size: 12px; padding: 3px 9px; opacity: .75; }
 .msg-actions .icon-btn:hover { opacity: 1; }
 .translation { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); color: var(--text-dim); font-size: 13px; font-style: italic; }
+.translation.error { color: var(--bad); font-style: normal; }
 .chat-input-row { display: flex; gap: 8px; }
 .chat-input-row textarea { min-height: 44px; }
 

@@ -1,5 +1,5 @@
 import { settingsStore, chatStore } from '../storage.js'
-import { chatReply, AIError } from '../ai.js'
+import { chatReply, translateToEnglish, AIError } from '../ai.js'
 import { escapeHtml } from '../util.js'
 import { isRecognitionSupported, isSynthesisSupported, createRecognizer, speak, stopSpeaking } from '../speech.js'
 
@@ -18,6 +18,7 @@ export function render(container) {
   let listening = false
   let recognizer = null
   const expanded = new Set()
+  const translating = new Set()
 
   const micSupported = isRecognitionSupported()
   const voiceSupported = isSynthesisSupported()
@@ -56,15 +57,18 @@ export function render(container) {
         if (m.role !== 'assistant') {
           return `<div class="msg ${m.role}">${escapeHtml(m.content)}</div>`
         }
-        const showTranslation = m.translation && expanded.has(i)
+        const showTranslation = expanded.has(i)
+        const isTranslating = translating.has(i)
+        const translateLabel = isTranslating ? '...' : showTranslation ? 'Hide EN' : 'EN'
         return `
         <div class="msg assistant">
           ${escapeHtml(m.content)}
           <div class="msg-actions">
             ${voiceSupported ? `<button class="icon-btn speak-btn" data-i="${i}" title="Play">🔊</button>` : ''}
-            ${m.translation ? `<button class="icon-btn translate-btn" data-i="${i}" title="Toggle English translation">${showTranslation ? 'Hide EN' : 'EN'}</button>` : ''}
+            <button class="icon-btn translate-btn" data-i="${i}" title="Toggle English translation" ${isTranslating ? 'disabled' : ''}>${translateLabel}</button>
           </div>
-          ${showTranslation ? `<div class="translation">${escapeHtml(m.translation)}</div>` : ''}
+          ${showTranslation && m.translation ? `<div class="translation">${escapeHtml(m.translation)}</div>` : ''}
+          ${showTranslation && !m.translation && !isTranslating ? `<div class="translation error">Translation failed. Click EN to retry.</div>` : ''}
         </div>`
       })
       .join('')
@@ -73,12 +77,33 @@ export function render(container) {
       btn.onclick = () => speak(history[Number(btn.dataset.i)].content)
     })
     log.querySelectorAll('.translate-btn').forEach((btn) => {
-      btn.onclick = () => {
-        const i = Number(btn.dataset.i)
-        expanded.has(i) ? expanded.delete(i) : expanded.add(i)
-        paint()
-      }
+      btn.onclick = () => toggleTranslation(Number(btn.dataset.i))
     })
+  }
+
+  async function toggleTranslation(i) {
+    if (expanded.has(i)) {
+      expanded.delete(i)
+      paint()
+      return
+    }
+    expanded.add(i)
+    if (history[i].translation || translating.has(i)) {
+      paint()
+      return
+    }
+    translating.add(i)
+    paint()
+    try {
+      const translation = await translateToEnglish({ apiKey: settings.apiKey, model: settings.model, text: history[i].content })
+      history[i] = { ...history[i], translation: translation.trim() }
+      chatStore.set(history)
+    } catch {
+      // leave translation unset; paint() shows a retry message
+    } finally {
+      translating.delete(i)
+      paint()
+    }
   }
 
   async function send() {
@@ -93,8 +118,8 @@ export function render(container) {
     sendBtn.disabled = true
     sendBtn.textContent = 'Thinking...'
     try {
-      const { text: reply, translation } = await chatReply({ apiKey: settings.apiKey, model: settings.model, level: settings.level, history })
-      history = [...history, { role: 'assistant', content: reply, translation }]
+      const reply = await chatReply({ apiKey: settings.apiKey, model: settings.model, level: settings.level, history })
+      history = [...history, { role: 'assistant', content: reply }]
       chatStore.set(history)
       paint()
       if (voiceSupported && settingsStore.get().autoSpeak) speak(reply)

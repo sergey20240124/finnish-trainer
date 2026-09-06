@@ -36,26 +36,27 @@ Rules:
 - Keep replies short (2-5 sentences) so it feels like a real chat, not a lecture.
 - Do not use emojis — replies are read aloud by text-to-speech, and emoji get spoken as literal descriptions.
 - Do not use markdown formatting (no **bold**, no _italics_, no backticks). Plain text only — this chat displays raw text and reads it aloud as-is, so "**word**" would literally show and be spoken as asterisks.
-- Occasionally ask a follow-up question to keep the conversation going.
-- After your Finnish reply, on a new line write exactly "###EN###" and then a concise English translation of your entire reply (correction included). The learner sees this only if they choose to reveal it, so always include it.`
+- Occasionally ask a follow-up question to keep the conversation going.`
 }
 
-const TRANSLATION_DELIM = '###EN###'
-
 export async function chatReply({ apiKey, model, level, history }) {
-  const raw = await callClaude({
+  return callClaude({
     apiKey,
     model,
     system: tutorSystemPrompt(level),
     messages: history.map((m) => ({ role: m.role, content: m.content })),
     maxTokens: 500,
   })
-  const idx = raw.indexOf(TRANSLATION_DELIM)
-  if (idx === -1) return { text: raw.trim(), translation: '' }
-  return {
-    text: raw.slice(0, idx).trim(),
-    translation: raw.slice(idx + TRANSLATION_DELIM.length).trim(),
-  }
+}
+
+export async function translateToEnglish({ apiKey, model, text }) {
+  return callClaude({
+    apiKey,
+    model,
+    system: 'Translate the given Finnish text to natural, fluent English. Output ONLY the translation — no preamble, no quotes.',
+    messages: [{ role: 'user', content: text }],
+    maxTokens: 300,
+  })
 }
 
 export async function generateWritingPrompt({ apiKey, model, level }) {
